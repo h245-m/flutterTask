@@ -1,10 +1,16 @@
 
 import 'dart:convert';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter_task/setting_screen.dart';
 import 'package:http/http.dart';
 import 'package:flutter/material.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+
+
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({Key? key}) : super(key: key);
+
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
@@ -14,7 +20,8 @@ class _LoginScreenState extends State<LoginScreen> {
 
   TextEditingController emailController = TextEditingController();
   TextEditingController passwordController = TextEditingController();
-  
+
+
   void login(String email , password) async {
     try {
       Response response = await post(
@@ -184,6 +191,8 @@ class _LoginScreenState extends State<LoginScreen> {
                       onPressed: () {
                         login(emailController.text.toString(), passwordController.text.toString());
                         formKey.currentState!.validate();
+                        Navigator.pushReplacement(context,
+                            MaterialPageRoute(builder: (_) => SettingPage() ));
 
                       },
                       child: const Text('Log In',
@@ -196,10 +205,9 @@ class _LoginScreenState extends State<LoginScreen> {
                     const SizedBox(
                       height: 21,
                     ),
-                    Row(
+                    const Row(
                       mainAxisAlignment: MainAxisAlignment.center,
-                      children: const
-                      [
+                      children: [
                         Text('OR',
                           style: TextStyle(
                             fontSize: 14,
@@ -212,7 +220,13 @@ class _LoginScreenState extends State<LoginScreen> {
                       height: 26,
                     ),
 
-                    ElevatedButton.icon(onPressed: (){},
+                    ElevatedButton.icon(onPressed: () async {
+                      await signInWithGoogle();
+
+                      setState(() {
+
+                      });
+                    },
                         style: ElevatedButton.styleFrom(
                          shadowColor:Colors.grey.withOpacity(0.6),
                           backgroundColor: const Color(0xffFFFFFF),
@@ -230,6 +244,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               color: Color(0xff000000)
                           ),)
                     ),
+
 
                     const SizedBox(
                       height: 30,
@@ -250,7 +265,8 @@ class _LoginScreenState extends State<LoginScreen> {
                     const SizedBox(
                       height: 30,
                     ),
-                    ElevatedButton.icon(onPressed: (){},
+                    ElevatedButton.icon(onPressed: (){
+                    },
                         style: ElevatedButton.styleFrom(
                           shadowColor: Colors.grey,
                           backgroundColor: const Color(0xff39579A),
@@ -316,5 +332,21 @@ class _LoginScreenState extends State<LoginScreen> {
         )
 
     );
+  }
+  Future<UserCredential> signInWithGoogle() async {
+    // Trigger the authentication flow
+    final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
+
+    // Obtain the auth details from the request
+    final GoogleSignInAuthentication? googleAuth = await googleUser?.authentication;
+
+    // Create a new credential
+    final credential = GoogleAuthProvider.credential(
+      accessToken: googleAuth?.accessToken,
+      idToken: googleAuth?.idToken,
+    );
+
+    // Once signed in, return the UserCredential
+    return await FirebaseAuth.instance.signInWithCredential(credential);
   }
 }
